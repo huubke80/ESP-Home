@@ -1,0 +1,174 @@
+esphome:
+  name: displaygang
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: "62b1a5211bdb1174413de21cda95536d"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Displaygang Fallback Hotspot"
+    password: "AurLPKliNAl2"
+
+captive_portal:
+
+time:
+  - platform: sntp
+    id: esptime
+    
+font:
+  - file: 'arial.ttf'
+    id: font1
+    size: 25
+
+  - file: 'arial.ttf'
+    id: font2
+    size: 20
+
+  - file: 'materialdesignicons-webfont.ttf'
+    id: icon_font
+    size: 35
+    glyphs: [
+      "󱂯", #deur gesloten
+      "󰠛", #deur dicht
+      "󰠜", #Deur open
+      "󰛙", #Garage dicht
+      "󰛚", #Garage open
+      "󰩺", #Vuilnisbak Grijs
+      "󰀵", #GFT Apple 
+      "󰊡", #Papier Gift
+      "󰑌", #Recycle plastic
+      "󱑒", #Clock 
+      ]
+      
+binary_sensor:
+  - platform: homeassistant
+    id: garagepoort
+    entity_id: binary_sensor.poort_contact
+    internal: true
+    
+  - platform: homeassistant
+    id: schuifpui
+    entity_id: binary_sensor.openclose_19
+    internal: true
+    
+  - platform: homeassistant
+    id: garagedeur_contact
+    entity_id: binary_sensor.garagedeur_contact
+    internal: true
+    
+  - platform: homeassistant
+    id: garagedeur_slot
+    entity_id: binary_sensor.garagedeur_schootcontact
+    internal: true
+    
+sensor:
+  - platform: homeassistant
+    id: tempserre
+    entity_id: sensor.temp_serre
+    internal: true
+
+  - platform: homeassistant
+    id: tempwoonk
+    entity_id: sensor.woonkamer_temperature
+    internal: true
+    
+text_sensor:
+  - platform: homeassistant
+    id: afval
+    entity_id: sensor.afvalwijzer_next_item
+    internal: true
+    
+  - platform: homeassistant
+    id: afval_date
+    entity_id: sensor.afvalwijzer_next_date
+    internal: true
+
+spi:
+  clk_pin: D0
+  mosi_pin: D1
+
+display:
+  - platform: waveshare_epaper
+    rotation: 90 °
+    cs_pin: D2
+    dc_pin: D3
+    busy_pin: D4
+    reset_pin: D5
+    model: 1.54inv2
+    full_update_every: 150
+    lambda: |- 
+      it.strftime(0, 30, id(font2), TextAlign::BASELINE_LEFT, "%H:%M", id(esptime).now());
+      /* Garagepoortstatus */
+      it.printf(0, 65, id(font1), TextAlign::BASELINE_LEFT, "Poort Garage");
+      if(id(garagepoort).state) {
+      //Garage poort dicht
+      it.print(199, 65, id(icon_font), TextAlign::BASELINE_RIGHT, "󰛙");
+      //ESP_LOGI("Garagepoort", "Dicht");
+      }
+      else {
+      //Garage poort open
+      it.print(199, 65, id(icon_font), TextAlign::BASELINE_RIGHT, "󰛚");
+      //ESP_LOGI("Garagepoort", "open");
+      }
+      /* Schuifpui */
+      it.printf(0, 135, id(font1), TextAlign::BASELINE_LEFT, "Schuifpui");
+      if(id(schuifpui).state) {
+      //Schuifpui open
+      it.print(199, 135, id(icon_font), TextAlign::BASELINE_RIGHT, "󰠜");
+      }
+      else {
+      //Schuifpui dicht
+      it.print(199, 135, id(icon_font), TextAlign::BASELINE_RIGHT, "󰠛");
+      }
+      /* Garagedeur */
+      it.printf(0, 100, id(font1), TextAlign::BASELINE_LEFT, "Deur Garage");
+      if(id(garagedeur_slot).state) {
+      //Deur op slot
+      it.print(199, 100, id(icon_font), TextAlign::BASELINE_RIGHT, "󱂯");
+      //ESP_LOGI("garagedeur", "op slot");
+      }
+      else if(id(garagedeur_contact).state) {
+      //Deur dicht
+      it.print(199, 100, id(icon_font), TextAlign::BASELINE_RIGHT, "󰠛");
+      // ESP_LOGI("garagedeur", "dicht");
+      }
+      else {
+      //garagedeur dicht
+      it.print(199, 100, id(icon_font), TextAlign::BASELINE_RIGHT, "󰠜");
+      //ESP_LOGI("garagedeur", "open");
+      }
+      /*AFVAL */
+      it.printf(0, 170, id(font1), TextAlign::BASELINE_LEFT, "%.*s:%s", 5, id(afval_date).state.c_str(),id(afval).state.c_str());
+      if(id(afval).state == "gft") {
+      //GFT
+      it.print(199, 170, id(icon_font), TextAlign::BASELINE_RIGHT, "󰀵");
+      //ESP_LOGI("GFT");
+      }
+      else if(id(afval).state == "pmd") {
+      //PMD
+      it.print(199, 170, id(icon_font), TextAlign::BASELINE_RIGHT, "󰑌");
+      //ESP_LOGI("PMD");
+      }
+      else if(id(afval).state == "papier") {
+      //Papier
+      it.print(199, 170, id(icon_font), TextAlign::BASELINE_RIGHT, "󰊡");
+      //ESP_LOGI("Papier");
+      }
+      else if(id(afval).state == "rest") {
+      //rest
+      it.print(199, 170, id(icon_font), TextAlign::BASELINE_RIGHT, "󰩺");
+      //ESP_LOGI("rest");
+      }
