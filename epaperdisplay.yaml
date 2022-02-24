@@ -11,7 +11,7 @@ logger:
 api:
 
 ota:
-  password: "62b1a5211bdb1174413de21cda95536d"
+  password: "!secret ota"
 
 wifi:
   ssid: !secret wifi_ssid
@@ -20,7 +20,7 @@ wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Displaygang Fallback Hotspot"
-    password: "AurLPKliNAl2"
+    password: "!secret fallback"
 
 captive_portal:
 
